@@ -1,0 +1,38 @@
+pipeline {
+    agent any
+    environment {
+        branch = 'master'
+        scmUrl = 'git@bitbucket.org:dutradda/voltaire.git'
+    }
+    stages {
+        stage('checkout git') {
+            steps {
+                git branch: branch, credentialsId: 'GitCredentials', url: scmUrl
+            }
+        }
+
+        stage('build') {
+            steps {
+                sh 'make build-image'
+            }
+        }
+
+        stage ('test') {
+            steps {
+                sh 'make build-local-integratione'
+            }
+        }
+
+        stage('deploy staging'){
+            steps {
+                sh 'make local-dev'
+            }
+        }
+
+    }
+    post {
+        failure {
+            mail to: 'team_dum@dafiti.com.br', subject: 'Pipeline failed', body: "${env.BUILD_URL}"
+        }
+    }
+}
